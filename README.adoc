@@ -1,0 +1,1004 @@
+[[quarkus-demo]]
+= Quarkus Demo
+:imagesdir: imgs
+:toc:
+:toc-title: Conteúdo
+:icons:
+
+This demo is based on Burr Sutter presentation on Voxxed Days.
+
+:toc-placement!:
+
+== Overview
+
+
+
+== Pre-req
+
+* https://code.visualstudio.com[VSCode]
+* https://marketplace.visualstudio.com/items?itemName=vscjava.vscode-java-pack[VSCode Java plugin pack]
+* https://marketplace.visualstudio.com/items?itemName=redhat.vscode-quarkus[VSCode plugin for quarkus]
+* https://www.postgresql.org/[Postgresql]
+* https://podman.io[Podman] or https://www.docker.com/[Docker]
+* https://www.openshift.com[Openshift 4.5]
+* https://github.com/openshift/odo[odo]
+* https://github.com/knative/client[KNative CLI]
+
+== Demo Setup
+
+Before jumping into the demo, open:
+
+* https://docs.google.com/presentation/d/1eonvCh1J3lMcWYtz6vVmSoPjVPpBdTy0hjQ5Xez2S-k/edit
+* https://us-east-2.console.aws.amazon.com/ec2/home?region=us-east-2#Instances:sort=instanceId
+* https://console-openshift-console.apps.techtour.luszczynski.me
+* http://localhost:8080
+* http://localhost:8081
+* http://try.openshift.com
+* http://quarkus.io
+* Open terminal on
+  * cd ~/github/quarkus-demo/todo-frontend/
+    * npm run dev
+  * rm -r $HOME/Downloads/todo-backend
+  * another tab for $HOME/Downloads/todo-backend
+    * mvn compile quarkus:dev
+  * another tab for postgresql
+    * podman run -p 5432:5432 -e POSTGRES_USER=admin -e POSTGRES_PASSWORD=redhat -e POSTGRES_DB=todo postgres:10
+* VSCode for Instructions
+* VSCode for frontend
+* Pgadmin
+* rm -rf /home/gustavo/github/quarkus-demo/todo-frontend/.odo
+* oc login https://api.techtour.luszczynski.me:6443
+* Clear gpaste
+
+== Local Development
+
+=== Backend API
+
+==== Creating our backend using Quarkus
+
+Let's created our first quarkus application. For this, open vscode, press `Ctrl` + `Shift` + `p` or `Command` + `Shift` + `p` on Mac and select `Quarkus: Generate a Maven Project`.
+
+We will be asked to fill some information about group-id, artifact-id, etc. Use the following values:
+
+* groupId: `com.redhat.quarkusdemo`
+* artifactId: `todo-backend`
+* version: `1.0.0-SNAPSHOT`
+* package name: `com.redhat.quarkusdemo`
+* resource name: `GreetingResource`
+
+:image:15.gif[]
+
+TIP: You can create your quarkus application using the https://code.quarkus.io/[code generator] as well.
+
+image::4-7-2020-17-22-41-PM.png[]
+
+==== Choosing our initial extensions
+
+Now we need to select which extension we would like to use. For now, let's skip this step by leaving `1 extensions selected`
+
+:image:28.png[]
+
+==== Select a folder to save your project
+
+Choose your `$HOME/Downloads` as this project will be temporary and click on button `Generate Here`.
+
+//:image:29.png[]
+
+image::5-7-2020-09-12-46-AM.png[]
+
+If you generated your code using the https://code.quarkus.io/[quarkus code generator], save your zip file and unzip it in the Downloads folder.
+
+==== Showing Java Pack Extension for VSCode
+
+Before moving on with our demo, we need to make sure if `java pack extension` is installed in our vscode environment. Click on `Extensions` icon.
+
+:image:02.png[]
+
+Then search for `java`:
+
+:image:03.png[]
+
+And make sure it is installed.
+
+:image:04.png[]
+
+:image:05.png[]
+
+==== Open our Greeting REST endpoint
+
+Open the generated Greeting REST endpoint.
+
+//:image:06.png[]
+
+image::5-7-2020-09-15-09-AM.png[]
+
+==== Hot Reload
+
+Let's run our quarkus app. Press `Ctrl` + `Shift` + `` ` `` or `Control` + `` ` ` on MacOS to open the vscode integrated terminal and run:
+
+[source,bash]
+----
+./mvnw compile quarkus:dev
+----
+
+:image:38.png[]
+
+After running this command, we should see something like this in our integrated terminal.
+
+:image:07.png[]
+
+NOTE: Notice the time that was necessary to start. Super fast and we are not using native mode yet.
+
+Now open your browser on `http://localhost:8080/hello`
+
+:image:08.png[]
+
+TIP: You can also click on the URL above the hello method.
+
+image::5-7-2020-10-30-55-AM.png[]
+
+Now change the hello method to return something else.
+
+[source,java]
+----
+package com.redhat.demoquarkus;
+
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+
+@Path("/hello")
+public class GreetingResource {
+
+    @GET
+    @Produces(MediaType.TEXT_PLAIN)
+    public String hello() {
+        return "hello from quarkus"; <1>
+    }
+}
+----
+<1> Change from `hello` to `hello from quarkus`
+
+
+Save your file and refresh your browser.
+
+:image:09.png[]
+
+Now you have an app that reload as fast as a nodejs application.
+
+==== Testing our endpoint
+
+Let's test our endpoint. For that, open `GreetingResourceTest.java`.
+
+image::4-7-2020-13-59-15-PM.png[] 
+
+Then, click on `Run Test`.
+
+:image:11.png[]
+
+When we run our test, it should not pass because our body content was changed in our rest endpoint but not in our test.
+
+NOTE: If for some reason you find an error like `Error: No delegateCommandHandler for vscode.java.checkProjectSettings`, then restart your vscode and you are good to go.
+
+:image:12.png[]
+
+Change the test body content according to our endpoint.
+
+[source,java]
+----
+    @Test
+    public void testHelloEndpoint() {
+        given()
+          .when().get("/hello")
+          .then()
+             .statusCode(200)
+             .body(is("hello from quarkus"));<1>
+    }
+----
+<1> Change from `hello` to `hello from quarkus`
+
+Now, run again our test and you should have passed on our endpoint test.
+
+:image:13.png[]
+
+==== Adding extensions
+
+Press again `Ctrl` + `Shift` + `p` or `Command` + `Shift` + `p` on Mac and search for `Quarkus: Add extensions to the current project`.
+
+:image:16.gif[]
+
+Now, select:
+
+* Hibernate ORM with Panache
+* RESTEasy JSON-B
+* JDBC Driver - PostgreSQL
+* REST resources for Hibernate ORM with Panache
+
+//:image:30.png[]
+image::5-7-2020-11-38-19-AM.png[]
+
+And press Enter to finish.
+
+Your integrated terminal, should look like this after hitting enter.
+
+:image:31.png[]
+
+You can also search extensions using the CLI.
+
+----
+# For maven
+mvn quarkus:list-extensions
+# or for gradle
+gradle list-extensions
+----
+
+Add hibernate panache, jsonb and postgresql extensions using:
+
+----
+mvn quarkus:add-extension -Dextensions=quarkus-hibernate-orm-panache,quarkus-resteasy-jsonb,quarkus-jdbc-postgresql
+----
+
+:image:14.png[]
+
+If you look at you pom.xml, you will see this last command added some new dependencies for us.
+
+:image:15.png[]
+
+We should see now that new installed features are avaiable
+
+:image:39.png[]
+
+==== Creating Todo Entity
+
+Create a new entity `Todo` inside our `demoquarkus` folder.
+
+image::Jul-09-2020-14-07-54.gif[]
+
+Now, we need to add some JPA annotations and also extends our class from PanacheEntity.
+
+:image:02.gif[]
+
+For now, let's just add a single field named `title` to our entity.
+
+:image:03.gif[]
+
+Here is our entity
+
+[source,java]
+----
+package com.redhat.demoquarkus;
+
+import javax.persistence.Entity;
+
+import io.quarkus.hibernate.orm.panache.PanacheEntity;
+
+/**
+ * Todo
+ */
+@Entity
+public class Todo extends PanacheEntity {
+    public String title;
+}
+----
+
+==== Postgresql
+
+To create a database for this demo, we'll use https://podman.io[podman] but you can also use https://www.docker.com/[docker] if you like it.
+
+Open a terminal and run:
+
+[source,bash]
+----
+# For Podman
+podman run \
+    --rm \
+    --name postgres \
+    -p 5432:5432 \
+    -e POSTGRES_USER=admin \ <1>
+    -e POSTGRES_PASSWORD=redhat \ <2>
+    -e POSTGRES_DB=todo postgres:10
+
+# Or Docker
+docker run \
+    --rm \
+    --name postgres \
+    -p 5432:5432 \
+    -e POSTGRES_USER=admin \ <1>
+    -e POSTGRES_PASSWORD=redhat \ <2>
+    -e POSTGRES_DB=todo postgres:10
+----
+<1> Database Username
+<2> Database Password
+
+If everything worked as expected, you should see that your database is ready to accept connections.
+
+:image:23.png[]
+
+==== Connecting to a database
+
+Open `application.properties` and generate a generic datasource configuration using the snippet `qds`.
+
+:image:23.gif[]
+
+Change the generated values to look like the following content:
+
+[source,bash]
+----
+%dev.quarkus.datasource.db-kind=postgresql <1>
+%dev.quarkus.datasource.username=admin
+%dev.quarkus.datasource.password=redhat
+%dev.quarkus.datasource.jdbc.url=jdbc:postgresql://localhost:5432/todo
+%dev.quarkus.datasource.jdbc.min-size=5
+%dev.quarkus.datasource.jdbc.max-size=15
+%dev.quarkus.hibernate-orm.database.generation=drop-and-create
+
+quarkus.http.cors=true <2>
+----
+<1> We are using the `%dev` prefix in every line. This is part of the quarkus profile and it tells quarkus to only apply this configuration when running in dev mode (mvn compile quarkus:dev)
+<2> As we do not specify `%dev` this property will be avaiable in dev and prod mode
+
+NOTE: Update these variables according to your environment.
+
+:image:16.png[]
+
+// ===== Creating a connection on Pgadmin3
+
+//:image:24.png[]
+
+//:image:25.png[]
+
+===== Checking your database
+
+//:image:08.gif[]
+
+Now, let's refresh our page on the browser.
+
+:image:17.png[]
+
+If we look now at our database, quarkus should already created a new table. You can check this out using
+
+[source,bash]
+----
+docker exec -it postgres /usr/bin/psql -d todo -U admin -c "\dt"
+----
+
+image::5-7-2020-11-25-30-AM.png[]
+
+Let's describe the table
+
+[source,bash]
+----
+docker exec -it postgres /usr/bin/psql -d todo -U admin -c "\d+ todo"
+----
+
+image::5-7-2020-11-26-34-AM.png[]
+
+//:image:09.gif[]
+
+We need to add some more fields to our entity. Let's do that.
+
+:image:04.gif[]
+
+The final entity should look like this
+
+[source,java]
+----
+package com.redhat.demoquarkus;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+
+import io.quarkus.hibernate.orm.panache.PanacheEntity;
+
+/**
+ * Todo
+ */
+@Entity
+public class Todo extends PanacheEntity {
+    public String title;
+    public boolean completed;
+    @Column(name = "ordering")
+    public int order;
+}
+----
+
+NOTE: We have changed our column name for the field `order` because it may conflict with some reserved words used by the database.
+
+Run again the describe table command
+
+[source,bash]
+----
+docker exec -it postgres /usr/bin/psql -d todo -U admin -c "\d+ todo"
+----
+
+image::5-7-2020-11-28-08-AM.png[]
+
+==== Syntax Errors
+
+Let's say that we forgot to add the semi-colon in the end of our entitys last line.
+
+[source,java]
+----
+...
+public class Todo extends PanacheEntity {
+    public String title;
+    public boolean completed;
+    @Column(name = "ordering")
+    public int order <1>
+}
+----
+<1> Forgot to add the semi-colon
+
+Now, open our browser and let's see how quarkus handle this kind of situation. Refresh your page.
+
+:image:19.png[]
+
+Correct your code, and hit refresh one more time.
+
+// If we look again for our database, we should see new columns.
+
+// :image:10.gif[]
+
+==== Creating our todo resource
+
+Create a new interface `TodoResource.java`.
+
+TIP: You can use a code snippet `qrc` to create a new rest resource. You can see all snippets in the https://github.com/redhat-developer/vscode-quarkus[vscode extension repository].
+
+// :image:05.gif[]
+
+image::Jul-10-2020-11-45-27.gif[]
+
+image::Jul-10-2020-11-48-36.gif[]
+
+Now, let's make it a CRUD REST endpoint by extending it.
+
+image::5-7-2020-11-51-46-AM.png[]
+
+//:image:18.gif[]
+
+// In the end, you should have this
+
+// [source,java]
+// ----
+// package com.redhat.quarkusdemo;
+
+// import javax.ws.rs.GET;
+// import javax.ws.rs.Path;
+// import javax.ws.rs.Produces;
+// import javax.ws.rs.core.MediaType;
+
+// @Path("/todo")
+// public class TodoResource {
+
+//     @GET
+//     @Produces(MediaType.TEXT_PLAIN)
+//     public String getAll() {
+//         return "hello";
+//     }
+// }
+// ----
+
+// Our class will consume and produces json. Let's adapt it:
+
+// :image:19.gif[]
+
+// We need to get all our todo items. For that, we are going to change the `getAll` method inside our `TodoResource`.
+
+// :image:20.gif[]
+
+// Your get method should looks like this
+
+// [source,java]
+// ----
+// package com.redhat.demoquarkus;
+
+// import java.util.List;
+
+// import javax.ws.rs.Consumes;
+// import javax.ws.rs.GET;
+// import javax.ws.rs.Path;
+// import javax.ws.rs.Produces;
+// import javax.ws.rs.core.MediaType;
+
+// /**
+//  * TodoResource
+//  */
+// @Path("/todo")
+// @Consumes(MediaType.APPLICATION_JSON)
+// @Produces(MediaType.APPLICATION_JSON)
+// public class TodoResource {
+
+//     @GET
+//     public List<Todo> getAll() {
+//         return Todo.listAll();
+//     }
+// }
+// ----
+
+// ==== Removing default page
+
+// When we open `http://localhost:8080` we can see this page.
+
+// :image:21.png[]
+
+// In the bottom of the page, it says how we can change this page. Let's do that.
+
+// :image:21.gif[]
+
+// Or we can execute:
+
+// ----
+// rm -f src/main/resources/META-INF/resources/index.html
+// ----
+
+// :image:22.png[]
+
+// ==== Adding POST method
+
+// Now add the POST method below `getAll`.
+
+// [source,java]
+// ----
+// ...
+//     @POST
+//     @Transactional
+//     public Response create(Todo item){
+//         item.persist();
+//         return Response.ok(item).status(201).build();
+//     }
+// ----
+
+// Save your work and test the todo app.
+
+// :image:11.gif[]
+
+// Check your database.
+
+// :image:12.gif[]
+
+// ==== Adding DELETE and PATCH method
+
+// [source,java]
+// ----
+// ...
+//     @DELETE
+//     @Transactional
+//     @Path("/{id}")
+//     public Response deleteOne(@PathParam("id") Long id) {
+//         Todo entity = Todo.findById(id);
+//         entity.delete();
+
+//         return Response.status(204).build();
+//     }
+
+//     @PATCH
+//     @Transactional
+//     @Path("/{id}")
+//     public Response update(Todo item, @PathParam("id") Long id) {
+//         Todo entity = Todo.findById(id);
+//         entity.id = item.id;
+//         entity.title = item.title;
+//         entity.completed = item.completed;
+//         entity.order = item.order;
+
+//         return Response.status(200).build();
+//     }
+// ----
+
+The final TodoResource that will be generated automatily by quarkus should be similar to this class
+
+WARNING: Do not copy the following class. It's only an example.
+
+[source,java]
+----
+package com.redhat.quarkusdemo;
+
+import java.util.List;
+
+import javax.transaction.Transactional;
+import javax.ws.rs.Consumes;
+import javax.ws.rs.DELETE;
+import javax.ws.rs.GET;
+import javax.ws.rs.PATCH;
+import javax.ws.rs.POST;
+import javax.ws.rs.Path;
+import javax.ws.rs.PathParam;
+import javax.ws.rs.Produces;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
+
+/**
+ * TodoResource
+ */
+@Path("/todo")
+@Produces(MediaType.APPLICATION_JSON)
+@Consumes(MediaType.APPLICATION_JSON)
+public class TodoResource {
+
+    @GET
+    public List<Todo> getAll() {
+        return Todo.listAll();
+    }
+
+    @POST
+    @Transactional
+    public Response create(Todo item){
+        item.persist();
+        return Response.ok(item).status(201).build();
+    }
+
+    @DELETE
+    @Transactional
+    @Path("/{id}")
+    public Response deleteOne(@PathParam("id") Long id) {
+        Todo entity = Todo.findById(id);
+        entity.delete();
+
+        return Response.status(204).build();
+    }
+
+    @PATCH
+    @Transactional
+    @Path("/{id}")
+    public Response update(Todo item, @PathParam("id") Long id) {
+        Todo entity = Todo.findById(id);
+        entity.id = item.id;
+        entity.title = item.title;
+        entity.completed = item.completed;
+        entity.order = item.order;
+
+        return Response.status(200).build();
+    }
+}
+----
+
+Now, change your `application.properties` to add the prod profile.
+
+[source,bash]
+----
+# Dev environment
+%dev.quarkus.datasource.db-kind=postgresql
+%dev.quarkus.datasource.username=admin
+%dev.quarkus.datasource.password=redhat
+%dev.quarkus.datasource.jdbc.url=jdbc:postgresql://localhost:5432/todo
+%dev.quarkus.datasource.jdbc.min-size=5
+%dev.quarkus.datasource.jdbc.max-size=15
+%dev.quarkus.hibernate-orm.database.generation=drop-and-create
+
+quarkus.http.cors=true
+
+# Production environment
+%prod.quarkus.datasource.db-kind=postgresql
+%prod.quarkus.datasource.username=admin
+%prod.quarkus.datasource.password=redhat
+%prod.quarkus.datasource.jdbc.url=jdbc:postgresql://localhost:5432/todo
+%prod.quarkus.datasource.jdbc.min-size=5
+%prod.quarkus.datasource.jdbc.max-size=15
+%prod.quarkus.hibernate-orm.database.generation=update
+----
+
+Test your todo app and make sure it is working correctly.
+
+==== Bean Validation
+
+Let's update our `Todo` class to avoid blank title.
+
+:image:13.gif[]
+
+==== OpenAPI, Swagger and Health Check Extensions
+
+We can use swagger in our API. For that, we need to add a new extension:
+
+TIP: Remember you can also add these two extensions below using `Ctrl` + `Shift` + `p` or `Command` + `Shift` + `p` on Mac
+
+[source,bash]
+----
+mvn quarkus:add-extension -Dextensions="quarkus-smallrye-openapi"
+----
+
+Restart quarkus and then open `http://localhost:8080/swagger-ui/`
+
+:image:26.png[]
+
+Now you can test all the four CRUD operations using swagger-ui.
+
+:image:14.gif[]
+
+It's important also to monitor the health check of our application. For that, add the `smallrye-health-extension`
+
+[source,bash]
+----
+mvn quarkus:add-extension -Dextensions="quarkus-smallrye-health"
+----
+
+Restart your quarkus and open `http://localhost:8080/health` to see your health check.
+
+:image:27.png[]
+
+==== Packaging our app
+
+===== Normal Jar
+
+Now let's package our app.
+
+[source,bash]
+----
+# Package
+mvn package -DskipTests
+
+# List files
+ls -lha target/
+----
+
+As you can see, our final jar is small because its libs is in other folders.
+
+image::5-7-2020-15-04-47-PM.png[]
+
+===== Fat Jar
+
+Now let's add a new property to allow quarkus generate a uber-jar.
+
+[source,bash]
+----
+# Dev environment
+%dev.quarkus.datasource.db-kind=postgresql
+%dev.quarkus.datasource.username=admin
+%dev.quarkus.datasource.password=redhat
+%dev.quarkus.datasource.jdbc.url=jdbc:postgresql://localhost:5432/todo
+%dev.quarkus.datasource.jdbc.min-size=5
+%dev.quarkus.datasource.jdbc.max-size=15
+%dev.quarkus.hibernate-orm.database.generation=drop-and-create
+
+quarkus.http.cors=true
+
+# Production environment
+%prod.quarkus.datasource.db-kind=postgresql
+%prod.quarkus.datasource.username=admin
+%prod.quarkus.datasource.password=redhat
+%prod.quarkus.datasource.jdbc.url=jdbc:postgresql://localhost:5432/todo
+%prod.quarkus.datasource.jdbc.min-size=5
+%prod.quarkus.datasource.jdbc.max-size=15
+%prod.quarkus.hibernate-orm.database.generation=update
+
+quarkus.package.uber-jar=true <1>
+----
+<1> add this line
+
+[source,bash]
+----
+# Package
+mvn package -DskipTests
+
+# List files
+ls -lha target/
+----
+
+Our jar is now bigger because it has its dependency in the same package
+
+image::5-7-2020-15-10-21-PM.png[]
+
+Test your todo app
+
+[source,bash]
+----
+# Run it
+java -jar target/todo-backend-1.0.0-SNAPSHOT-runner.jar
+----
+
+image::5-7-2020-15-24-14-PM.png[]
+
+Get java PID:
+
+[source,bash]
+----
+JAVA_DEMO_PID=$(ps aux | grep java | grep todo-backend | awk '{ print $2}' | head -1)
+----
+
+Now check how much resource it's been used by this java process:
+
+[source,bash]
+----
+ps -o pid,rss -p $JAVA_DEMO_PID | awk 'NR>1 {$2=int($2/1024)"M";}{ print;}'
+----
+
+===== Native
+
+[source,bash]
+----
+# Without container
+./mvnw package \
+    -Pnative \
+    -DskipTests
+
+# Docker
+./mvnw package \
+    -Pnative \
+    -Dquarkus.native.container-runtime=docker \
+    -DskipTests
+
+# Podman
+./mvnw package \
+    -Pnative \
+    -Dquarkus.native.container-runtime=podman \
+    -DskipTests
+----
+
+Run our app:
+
+[source,bash]
+----
+./target/todo-backend-1.0.0-SNAPSHOT-runner
+----
+
+image::5-7-2020-18-34-34-PM.png[]
+
+Now, let's check how much memory our native instance is using.
+
+[source,bash]
+----
+JAVA_DEMO_PID=$(ps aux | grep todo-backend | grep runner | awk '{ print $2}' | head -1)
+----
+
+[source,bash]
+----
+ps -o pid,rss -p $JAVA_DEMO_PID | awk 'NR>1 {$2=int($2/1024)"M";}{ print;}'
+----
+
+image::5-7-2020-18-37-46-PM.png[]
+
+=== Frontend
+
+[source,bash]
+----
+git clone https://github.com/luszczynski/quarkus-demo.git && cd todo-frontend
+cd todo-frontend && npm run dev
+----
+
+Open `http://localhost:8081` to see if it is working properly.
+
+== Openshift Demo Deploy
+
+Let's deploy our application to Openshift.
+
+=== Postgresql
+
+First, we need to deploy postgresql on Openshift. This is very simple.
+
+[source,bash]
+----
+oc new-project todo
+----
+
+Switch to the `Developer Console`:
+
+:image:22.gif[]
+
+Now, choose the `database` category.
+
+:image:33.png[]
+
+Choose `Postgresql (Ephemeral)` from the catalog.
+
+:image:34.png[]
+
+Fill in the information as below
+
+* Memory Limit: `512Mi`
+* Namespace: `openshift`
+* Database Service Name: `postgresql`
+* PostgreSQL Connection Username: `admin`
+* PostgreSQL Connection Password: `redhat`
+* PostgreSQL Database Name: `todo`
+* Version of PostgreSQL Image: `10`
+
+:image:35.png[]
+
+We should see the following screen
+
+:image:36.png[]
+
+If we click on `Topology` on the left menu, we have the same blue circle we had on OCP v3.11.
+
+:image:37.png[]
+
+=== Quarkus Deploy
+
+==== Native mode
+
+===== Native Binary deployment
+
+[source,bash]
+----
+# Using odo
+odo project create todo
+odo create java:11 todo-backend-native \
+    --binary target/todo-backend-1.0.0-SNAPSHOT-runner \
+    --app todo \
+    --env QUARKUS_DATASOURCE_JDBC_URL=jdbc:postgresql://postgresql:5432/todo
+odo url create --port 8080
+odo push
+
+# Using oc
+oc new-build quay.io/quarkus/ubi-quarkus-native-binary-s2i:19.2.1 --binary --name=todo-backend -l app=todo -n todo
+oc start-build todo-backend --from-file target/*-runner --follow -n todo-app
+oc new-app todo-backend && oc expose svc/todo-backend -n todo-app
+oc rollout status -w dc/todo-backend
+----
+
+===== Native Source-to-image deployment
+
+[source,bash]
+----
+oc new-build --binary --name=quarkus-project -l app=quarkus-project
+oc patch bc/quarkus-project -p '{"spec":{"strategy":{"dockerStrategy":{"dockerfilePath":"src/main/docker/Dockerfile.native"}}}}'
+oc start-build quarkus-project --from-dir=. --follow
+oc new-app --image-stream=quarkus-project:latest
+oc expose service quarkus-project
+oc new-project quarkus
+----
+
+==== Deploy using JVM mode
+
+===== Usando S2i
+
+[source,bash]
+----
+# To build the image on OpenShift
+oc new-app quay.io/quarkus/ubi-quarkus-native-s2i:20.1.0-java11~https://github.com/quarkusio/quarkus-quickstarts.git --context-dir=getting-started --name=quarkus-quickstart-native
+oc logs -f bc/quarkus-quickstart-native
+
+# To create the route
+oc expose svc/quarkus-quickstart-native
+
+# Get the route URL
+export URL="http://$(oc get route | grep quarkus-quickstart-native | awk '{print $2}')"
+echo $URL
+curl $URL/hello/greeting/quarkus
+----
+
+===== Usando Binary Deployment
+
+[source,bash]
+----
+# Using odo
+odo project create todo
+odo create java:11 todo-backend \
+    --binary target/todo-backend-1.0.0-SNAPSHOT-runner.jar \
+    --app todo \
+    --env QUARKUS_DATASOURCE_JDBC_URL=jdbc:postgresql://postgresql:5432/todo
+odo url create --port 8080
+odo push
+odo log -f
+
+# Using oc
+mkdir target/deployments && cp target/todo-backend-1.0.0-SNAPSHOT-runner.jar target/deployments
+#oc new-build --binary --image-stream=java:11 --name=todo-backend -l app=todo-backend -n todo
+oc start-build todo-backend --from-file=target/todo-backend-1.0.0-SNAPSHOT-runner.jar --follow -n todo
+oc start-build todo-backend --from-dir=target/deployments --follow -n todo
+oc new-app todo-backend -n todo
+oc expose svc todo-backend -n todo
+----
+
+=== Frontend Deploy
+
+[source,bash]
+----
+cd todo-frontend
+odo project set todo
+odo catalog list components
+odo create nodejs todo-frontend --app todo
+odo url create todo-frontend
+odo push
+odo link backend --port 8080
+odo watch
+----
+
+=== Using KNative
+
+[source,bash]
+----
+docker.io/luszczynski/todo-backend
+docker.io/luszczynski/todo-frontend
+----

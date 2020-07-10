@@ -1,0 +1,18 @@
+{
+  "private": true,
+  "dependencies": {
+    "director": "^1.2.0",
+    "node-static": "^0.7.11",
+    "todomvc-app-css": "^2.0.0",
+    "todomvc-common": "^1.0.1",
+    "vue": "^2.1.8",
+    "vue-axios": "^2.1.4"
+  },
+  "devDependencies": {
+    "browser-sync": "^2.26.7"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "dev": "FRONTEND_PORT=8081 node server.js"
+  }
+}
