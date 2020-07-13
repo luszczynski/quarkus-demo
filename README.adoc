@@ -66,7 +66,7 @@ We will be asked to fill some information about group-id, artifact-id, etc. Use 
 * package name: `com.redhat.quarkusdemo`
 * resource name: `GreetingResource`
 
-:image:15.gif[]
+image::15.gif[]
 
 TIP: You can create your quarkus application using the https://code.quarkus.io/[code generator] as well.
 
@@ -76,13 +76,13 @@ image::4-7-2020-17-22-41-PM.png[]
 
 Now we need to select which extension we would like to use. For now, let's skip this step by leaving `1 extensions selected`
 
-:image:28.png[]
+image::28.png[]
 
 ==== Select a folder to save your project
 
 Choose your `$HOME/Downloads` as this project will be temporary and click on button `Generate Here`.
 
-//:image:29.png[]
+//image::29.png[]
 
 image::5-7-2020-09-12-46-AM.png[]
 
@@ -92,23 +92,23 @@ If you generated your code using the https://code.quarkus.io/[quarkus code gener
 
 Before moving on with our demo, we need to make sure if `java pack extension` is installed in our vscode environment. Click on `Extensions` icon.
 
-:image:02.png[]
+image::02.png[]
 
 Then search for `java`:
 
-:image:03.png[]
+image::03.png[]
 
 And make sure it is installed.
 
-:image:04.png[]
+image::04.png[]
 
-:image:05.png[]
+image::05.png[]
 
 ==== Open our Greeting REST endpoint
 
 Open the generated Greeting REST endpoint.
 
-//:image:06.png[]
+//image::06.png[]
 
 image::5-7-2020-09-15-09-AM.png[]
 
@@ -121,17 +121,17 @@ Let's run our quarkus app. Press `Ctrl` + `Shift` + `` ` `` or `Control` + `` ` 
 ./mvnw compile quarkus:dev
 ----
 
-:image:38.png[]
+image::38.png[]
 
 After running this command, we should see something like this in our integrated terminal.
 
-:image:07.png[]
+image::07.png[]
 
 NOTE: Notice the time that was necessary to start. Super fast and we are not using native mode yet.
 
 Now open your browser on `http://localhost:8080/hello`
 
-:image:08.png[]
+image::08.png[]
 
 TIP: You can also click on the URL above the hello method.
 
@@ -163,7 +163,7 @@ public class GreetingResource {
 
 Save your file and refresh your browser.
 
-:image:09.png[]
+image::09.png[]
 
 Now you have an app that reload as fast as a nodejs application.
 
@@ -175,13 +175,13 @@ image::4-7-2020-13-59-15-PM.png[]
 
 Then, click on `Run Test`.
 
-:image:11.png[]
+image::11.png[]
 
 When we run our test, it should not pass because our body content was changed in our rest endpoint but not in our test.
 
 NOTE: If for some reason you find an error like `Error: No delegateCommandHandler for vscode.java.checkProjectSettings`, then restart your vscode and you are good to go.
 
-:image:12.png[]
+image::12.png[]
 
 Change the test body content according to our endpoint.
 
@@ -200,13 +200,13 @@ Change the test body content according to our endpoint.
 
 Now, run again our test and you should have passed on our endpoint test.
 
-:image:13.png[]
+image::13.png[]
 
 ==== Adding extensions
 
 Press again `Ctrl` + `Shift` + `p` or `Command` + `Shift` + `p` on Mac and search for `Quarkus: Add extensions to the current project`.
 
-:image:16.gif[]
+image::16.gif[]
 
 Now, select:
 
@@ -215,14 +215,14 @@ Now, select:
 * JDBC Driver - PostgreSQL
 * REST resources for Hibernate ORM with Panache
 
-//:image:30.png[]
+//image::30.png[]
 image::5-7-2020-11-38-19-AM.png[]
 
 And press Enter to finish.
 
 Your integrated terminal, should look like this after hitting enter.
 
-:image:31.png[]
+image::31.png[]
 
 You can also search extensions using the CLI.
 
@@ -239,15 +239,15 @@ Add hibernate panache, jsonb, postgresql and rest datasource extensions using:
 mvn quarkus:add-extension -Dextensions=quarkus-hibernate-orm-panache,quarkus-resteasy-jsonb,quarkus-jdbc-postgresql,quarkus-hibernate-orm-rest-data-panache
 ----
 
-:image:14.png[]
+image::14.png[]
 
 If you look at you pom.xml, you will see this last command added some new dependencies for us.
 
-:image:15.png[]
+image::15.png[]
 
 We should see now that new installed features are avaiable
 
-:image:39.png[]
+image::39.png[]
 
 ==== Creating Todo Entity
 
@@ -257,11 +257,11 @@ image::Jul-09-2020-14-07-54.gif[]
 
 Now, we need to add some JPA annotations and also extends our class from PanacheEntity.
 
-:image:02.gif[]
+image::02.gif[]
 
 For now, let's just add a single field named `title` to our entity.
 
-:image:03.gif[]
+image::03.gif[]
 
 Here is our entity
 
@@ -316,13 +316,13 @@ docker run \
 
 If everything worked as expected, you should see that your database is ready to accept connections.
 
-:image:23.png[]
+image::23.png[]
 
 ==== Connecting to a database
 
 Open `application.properties` and generate a generic datasource configuration using the snippet `qds`.
 
-:image:23.gif[]
+image::23.gif[]
 
 Change the generated values to look like the following content:
 
@@ -343,21 +343,21 @@ quarkus.http.cors=true <2>
 
 NOTE: Update these variables according to your environment.
 
-:image:16.png[]
+image::16.png[]
 
 // ===== Creating a connection on Pgadmin3
 
-//:image:24.png[]
+//image::24.png[]
 
-//:image:25.png[]
+//image::25.png[]
 
 ===== Checking your database
 
-//:image:08.gif[]
+//image::08.gif[]
 
 Now, let's refresh our page on the browser.
 
-:image:17.png[]
+image::17.png[]
 
 If we look now at our database, quarkus should already created a new table. You can check this out using
 
@@ -379,11 +379,11 @@ docker exec -it postgres /usr/bin/psql -d todo -U admin -c "\d+ todo"
 
 image::5-7-2020-11-26-34-AM.png[]
 
-//:image:09.gif[]
+//image::09.gif[]
 
 We need to add some more fields to our entity. Let's do that.
 
-:image:04.gif[]
+image::04.gif[]
 
 The final entity should look like this
 
@@ -437,13 +437,13 @@ public class Todo extends PanacheEntity {
 
 Now, open our browser and let's see how quarkus handle this kind of situation. Refresh your page.
 
-:image:19.png[]
+image::19.png[]
 
 Correct your code, and hit refresh one more time.
 
 // If we look again for our database, we should see new columns.
 
-// :image:10.gif[]
+// image::10.gif[]
 
 ==== Creating our todo resource
 
@@ -451,7 +451,7 @@ Create a new interface `TodoResource.java`.
 
 TIP: You can use a code snippet `qrc` to create a new rest resource. You can see all snippets in the https://github.com/redhat-developer/vscode-quarkus[vscode extension repository].
 
-// :image:05.gif[]
+// image::05.gif[]
 
 image::Jul-10-2020-11-45-27.gif[]
 
@@ -461,7 +461,7 @@ Now, let's make it a CRUD REST endpoint by extending it.
 
 image::5-7-2020-11-51-46-AM.png[]
 
-//:image:18.gif[]
+//image::18.gif[]
 
 // In the end, you should have this
 
@@ -487,11 +487,11 @@ image::5-7-2020-11-51-46-AM.png[]
 
 // Our class will consume and produces json. Let's adapt it:
 
-// :image:19.gif[]
+// image::19.gif[]
 
 // We need to get all our todo items. For that, we are going to change the `getAll` method inside our `TodoResource`.
 
-// :image:20.gif[]
+// image::20.gif[]
 
 // Your get method should looks like this
 
@@ -526,11 +526,11 @@ image::5-7-2020-11-51-46-AM.png[]
 
 // When we open `http://localhost:8080` we can see this page.
 
-// :image:21.png[]
+// image::21.png[]
 
 // In the bottom of the page, it says how we can change this page. Let's do that.
 
-// :image:21.gif[]
+// image::21.gif[]
 
 // Or we can execute:
 
@@ -538,7 +538,7 @@ image::5-7-2020-11-51-46-AM.png[]
 // rm -f src/main/resources/META-INF/resources/index.html
 // ----
 
-// :image:22.png[]
+// image::22.png[]
 
 // ==== Adding POST method
 
@@ -557,11 +557,11 @@ image::5-7-2020-11-51-46-AM.png[]
 
 // Save your work and test the todo app.
 
-// :image:11.gif[]
+// image::11.gif[]
 
 // Check your database.
 
-// :image:12.gif[]
+// image::12.gif[]
 
 // ==== Adding DELETE and PATCH method
 
@@ -690,7 +690,7 @@ Test your todo app and make sure it is working correctly.
 
 Let's update our `Todo` class to avoid blank title.
 
-:image:13.gif[]
+image::13.gif[]
 
 ==== OpenAPI, Swagger and Health Check Extensions
 
@@ -705,11 +705,11 @@ mvn quarkus:add-extension -Dextensions="quarkus-smallrye-openapi"
 
 Restart quarkus and then open `http://localhost:8080/swagger-ui/`
 
-:image:26.png[]
+image::26.png[]
 
 Now you can test all the four CRUD operations using swagger-ui.
 
-:image:14.gif[]
+image::14.gif[]
 
 It's important also to monitor the health check of our application. For that, add the `smallrye-health-extension`
 
@@ -720,7 +720,7 @@ mvn quarkus:add-extension -Dextensions="quarkus-smallrye-health"
 
 Restart your quarkus and open `http://localhost:8080/health` to see your health check.
 
-:image:27.png[]
+image::27.png[]
 
 ==== Packaging our app
 
@@ -889,15 +889,15 @@ oc new-project todo
 
 Switch to the `Developer Console`:
 
-:image:22.gif[]
+image::22.gif[]
 
 Now, choose the `database` category.
 
-:image:33.png[]
+image::33.png[]
 
 Choose `Postgresql (Ephemeral)` from the catalog.
 
-:image:34.png[]
+image::34.png[]
 
 Fill in the information as below
 
@@ -909,15 +909,15 @@ Fill in the information as below
 * PostgreSQL Database Name: `todo`
 * Version of PostgreSQL Image: `10`
 
-:image:35.png[]
+image::35.png[]
 
 We should see the following screen
 
-:image:36.png[]
+image::36.png[]
 
 If we click on `Topology` on the left menu, we have the same blue circle we had on OCP v3.11.
 
-:image:37.png[]
+image::37.png[]
 
 === Quarkus Deploy
 
