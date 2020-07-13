@@ -171,7 +171,7 @@ Now you have an app that reload as fast as a nodejs application.
 
 Let's test our endpoint. For that, open `GreetingResourceTest.java`.
 
-image::4-7-2020-13-59-15-PM.png[] 
+image::4-7-2020-13-59-15-PM.png[]
 
 Then, click on `Run Test`.
 
@@ -233,10 +233,10 @@ mvn quarkus:list-extensions
 gradle list-extensions
 ----
 
-Add hibernate panache, jsonb and postgresql extensions using:
+Add hibernate panache, jsonb, postgresql and rest datasource extensions using:
 
 ----
-mvn quarkus:add-extension -Dextensions=quarkus-hibernate-orm-panache,quarkus-resteasy-jsonb,quarkus-jdbc-postgresql
+mvn quarkus:add-extension -Dextensions=quarkus-hibernate-orm-panache,quarkus-resteasy-jsonb,quarkus-jdbc-postgresql,quarkus-hibernate-orm-rest-data-panache
 ----
 
 :image:14.png[]
@@ -297,7 +297,8 @@ podman run \
     -p 5432:5432 \
     -e POSTGRES_USER=admin \ <1>
     -e POSTGRES_PASSWORD=redhat \ <2>
-    -e POSTGRES_DB=todo postgres:10
+    -e POSTGRES_DB=todo \ <3>
+    postgres:10
 
 # Or Docker
 docker run \
@@ -306,10 +307,12 @@ docker run \
     -p 5432:5432 \
     -e POSTGRES_USER=admin \ <1>
     -e POSTGRES_PASSWORD=redhat \ <2>
-    -e POSTGRES_DB=todo postgres:10
+    -e POSTGRES_DB=todo \ <3>
+    postgres:10
 ----
-<1> Database Username
-<2> Database Password
+<1> Database username
+<2> Database password
+<3> Database name
 
 If everything worked as expected, you should see that your database is ready to accept connections.
 
@@ -361,6 +364,8 @@ If we look now at our database, quarkus should already created a new table. You 
 [source,bash]
 ----
 docker exec -it postgres /usr/bin/psql -d todo -U admin -c "\dt"
+
+docker exec -it postgres /usr/bin/psql -d todo -U admin -c "select * from public.todo"
 ----
 
 image::5-7-2020-11-25-30-AM.png[]
@@ -673,7 +678,7 @@ quarkus.http.cors=true
 %prod.quarkus.datasource.db-kind=postgresql
 %prod.quarkus.datasource.username=admin
 %prod.quarkus.datasource.password=redhat
-%prod.quarkus.datasource.jdbc.url=jdbc:postgresql://localhost:5432/todo
+%prod.quarkus.datasource.jdbc.url=jdbc:postgresql://postgresql:5432/todo
 %prod.quarkus.datasource.jdbc.min-size=5
 %prod.quarkus.datasource.jdbc.max-size=15
 %prod.quarkus.hibernate-orm.database.generation=update
@@ -757,7 +762,7 @@ quarkus.http.cors=true
 %prod.quarkus.datasource.db-kind=postgresql
 %prod.quarkus.datasource.username=admin
 %prod.quarkus.datasource.password=redhat
-%prod.quarkus.datasource.jdbc.url=jdbc:postgresql://localhost:5432/todo
+%prod.quarkus.datasource.jdbc.url=jdbc:postgresql://postgresql:5432/todo
 %prod.quarkus.datasource.jdbc.min-size=5
 %prod.quarkus.datasource.jdbc.max-size=15
 %prod.quarkus.hibernate-orm.database.generation=update
@@ -785,6 +790,17 @@ Test your todo app
 ----
 # Run it
 java -jar target/todo-backend-1.0.0-SNAPSHOT-runner.jar
+----
+
+We will face an error regarding `UnknownHostException`. This is happening because when we package our application it runs as prod profile.
+
+image::0-7-2020-10-37-48-AM.png[]
+
+We can change the profile:
+
+[source,bash]
+----
+java -Dquarkus.profile=dev -jar target/todo-backend-1.0.0-SNAPSHOT-runner.jar
 ----
 
 image::5-7-2020-15-24-14-PM.png[]
@@ -829,7 +845,7 @@ Run our app:
 
 [source,bash]
 ----
-./target/todo-backend-1.0.0-SNAPSHOT-runner
+./target/todo-backend-1.0.0-SNAPSHOT-runner -Dquarkus.profile=dev
 ----
 
 image::5-7-2020-18-34-34-PM.png[]
@@ -852,8 +868,8 @@ image::5-7-2020-18-37-46-PM.png[]
 
 [source,bash]
 ----
-git clone https://github.com/luszczynski/quarkus-demo.git && cd todo-frontend
-cd todo-frontend && npm run dev
+cd /tmp && git clone https://github.com/luszczynski/quarkus-demo.git && cd quarkus-demo/todo-frontend
+npm install && npm run dev
 ----
 
 Open `http://localhost:8081` to see if it is working properly.
@@ -911,6 +927,10 @@ If we click on `Topology` on the left menu, we have the same blue circle we had 
 
 [source,bash]
 ----
+# Using maven
+./mvnw clean package -Dquarkus.container-image.build=true
+./mvnw clean package -Dquarkus.kubernetes.deploy=true
+
 # Using odo
 odo project create todo
 odo create java:11 todo-backend-native \
@@ -945,17 +965,18 @@ oc new-project quarkus
 
 [source,bash]
 ----
-# To build the image on OpenShift
-oc new-app quay.io/quarkus/ubi-quarkus-native-s2i:20.1.0-java11~https://github.com/quarkusio/quarkus-quickstarts.git --context-dir=getting-started --name=quarkus-quickstart-native
-oc logs -f bc/quarkus-quickstart-native
+# Using maven
+./mvnw clean package \
+    -DskipTests \
+    -Dquarkus.container-image.build=true \
+    -Dquarkus.container-image.insecure=true
+./mvnw clean package -DskipTests -Dquarkus.kubernetes.deploy=true
+
+oc new-app registry.access.redhat.com/ubi8/openjdk-11:latest~https://github.com/quarkusio/quarkus-quickstarts.git --context-dir=todo-backend --name=todo-backend
+oc logs -f bc/todo-backend
 
 # To create the route
-oc expose svc/quarkus-quickstart-native
-
-# Get the route URL
-export URL="http://$(oc get route | grep quarkus-quickstart-native | awk '{print $2}')"
-echo $URL
-curl $URL/hello/greeting/quarkus
+oc expose svc/todo-backend
 ----
 
 ===== Usando Binary Deployment
@@ -973,10 +994,10 @@ odo push
 odo log -f
 
 # Using oc
-mkdir target/deployments && cp target/todo-backend-1.0.0-SNAPSHOT-runner.jar target/deployments
-#oc new-build --binary --image-stream=java:11 --name=todo-backend -l app=todo-backend -n todo
+#mkdir target/deployments && cp target/todo-backend-1.0.0-SNAPSHOT-runner.jar target/deployments
+oc new-build --binary --image-stream=java:11 --name=todo-backend -l app=todo-backend -n todo
 oc start-build todo-backend --from-file=target/todo-backend-1.0.0-SNAPSHOT-runner.jar --follow -n todo
-oc start-build todo-backend --from-dir=target/deployments --follow -n todo
+#oc start-build todo-backend --from-dir=target/deployments --follow -n todo
 oc new-app todo-backend -n todo
 oc expose svc todo-backend -n todo
 ----
@@ -985,14 +1006,16 @@ oc expose svc todo-backend -n todo
 
 [source,bash]
 ----
+
 cd todo-frontend
 odo project set todo
 odo catalog list components
 odo create nodejs todo-frontend --app todo
 odo url create todo-frontend
 odo push
-odo link backend --port 8080
 odo watch
+
+#odo link todo-backend --port 8080
 ----
 
 === Using KNative
